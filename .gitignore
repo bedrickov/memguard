@@ -1,0 +1,26 @@
+# Build directories
+build/
+bin/
+obj/
+out/
+.cache/
+
+# Executables and libraries
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.pdb
+
+# IDE and tool files
+.vscode/
+.vs/
+*.user
+*.suo
+compile_commands.json
+.clang-format-state
+dumps/
+*.sarif
+scan_results.json
