@@ -1,4 +1,6 @@
 #include "memguard/core/hook_detector.hpp"
+#include <span>
+#include <array>
 #include <cstring>
 #include <sstream>
 #include <iomanip>

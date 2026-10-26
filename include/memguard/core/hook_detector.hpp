@@ -2,6 +2,7 @@
 
 #include "memguard/core/types.hpp"
 #include "memguard/core/process.hpp"
+#include <span>
 #include <vector>
 #include <string>
 
