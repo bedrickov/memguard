@@ -76,9 +76,11 @@ std::string MemoryScanner::type_to_string(std::uint32_t type) noexcept {
 std::vector<Finding> MemoryScanner::analyze_region(const MemoryRegion& region) {
     std::vector<Finding> findings;
 
-    // Only inspect committed regions
+    // Skip uncommitted, guard, or no-access pages to avoid access violations
 #ifdef _WIN32
-    if ((region.state & MEM_COMMIT) == 0) {
+    if ((region.state & MEM_COMMIT) == 0 ||
+        (region.protect & PAGE_GUARD) != 0 ||
+        (region.protect & PAGE_NOACCESS) != 0) {
         return findings;
     }
 #endif
@@ -101,9 +103,14 @@ std::vector<Finding> MemoryScanner::analyze_region(const MemoryRegion& region) {
     if (region.is_private && contains_pe_header(sample)) {
         Finding f;
         f.rule_id = "MG-001";
-        f.severity = Severity::Critical;
-        f.title = "Unbacked PE Header in Private Memory (Reflective DLL / Process Hollowing)";
-        f.description = "Detected valid DOS/PE executable headers in private unmapped memory page.";
+        // If executable, this is an active reflective code injection (CRITICAL)
+        // If non-executable, this is an inactive staged payload or memory cache (MEDIUM)
+        f.severity = is_executable ? Severity::Critical : Severity::Medium;
+        f.title = is_executable ? "Active In-Memory PE / Reflective DLL (Executable)"
+                                : "Staged Unbacked PE Image in Private Memory";
+        f.description = is_executable
+            ? "Detected valid DOS/PE executable headers in private executable memory page (active injection)."
+            : "Detected valid DOS/PE header in private non-executable data allocation (staged artifact).";
         f.address = region.base_address;
         f.size = region.region_size;
         f.entropy = entropy;
